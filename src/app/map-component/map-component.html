@@ -1,4 +1,27 @@
-<p>Here we should have the map. Distance to trail: {{ closestDistance }} m</p>
+@if (closestDistance() === undefined) {
+  <p>Location data is not available. {{ closestDistance()}}</p>
+}
+@if (closestDistance() !== undefined && closestDistance()! < 20) {
+  <p>You are on the trail.</p>
+}
+@if (closestDistance() !== undefined && 20 <= closestDistance()! && closestDistance()! < 250) {
+  <p>You are near the trail, at {{closestDistance()|distance}}.</p>
+}
+@if (closestDistance() !== undefined && closestDistance()! > 250) {
+  <p>You {{ closestDistance()! | distance }} away from the trail.</p>
+}
+
+@if (currentStage() && closestDistance()! < 250) {
+  <p>
+  Current stage: {{ currentStage()?.name }}.
+  == Distance to {{ currentStage()?.end_label }} is {{ distanceToEndOfStage() | distance }}.
+  @if (nextPoi()){
+    == Next point of interest: {{ nextPoi()?.name || 'none' }} at {{ distanceToNextPoi() | distance }}.
+  }
+  </p>
+}
+
+
 <div class="map-container">
   <div class="map-frame">
     <div id="map"></div>

@@ -1,11 +1,19 @@
-import { AfterViewInit, Component, inject, OnInit, Pipe } from '@angular/core';
+import { AfterViewInit, Component, inject, OnInit, Pipe, signal } from '@angular/core';
 import * as L from 'leaflet';
-import { TrailDataService } from '../trail-data-service/trail-data-service';
+import { TrailDataService, Stage, Trail, PoI } from '../trail-data-service/trail-data-service';
 import { LocationService } from '../location-service/location-service';
+import { DistancePipe } from '../pipes';
+import { filter } from 'rxjs';
 
+const endOfStageIcon = L.divIcon({
+  className: 'stage-endpoint',
+  html: '<div style="width:15px;height:15px;border-radius:50%;background:green;"></div>',
+  iconSize: [12, 12],
+  iconAnchor: [6, 6],
+});
 @Component({
   selector: 'app-map-component',
-  imports: [],
+  imports: [DistancePipe],
   templateUrl: './map-component.html',
   styleUrl: './map-component.scss',
 })
@@ -17,10 +25,13 @@ export class MapComponent implements OnInit, AfterViewInit{
   private readonly locationService = inject(LocationService);
 
   //calculated values
-  closestDistance: number | null = 100;
+  closestDistance = signal<number | undefined>(undefined); // in metres
+  currentStage = signal<Stage | undefined>(undefined);
+  distanceToEndOfStage = signal<number | undefined>(undefined); // in metres
+  nextPoi = signal<PoI | undefined>(undefined);
+  distanceToNextPoi = signal<number | undefined>(undefined);
 
   followMe = false;
-  stageName: any;
 
   constructor() { }
 
@@ -32,6 +43,12 @@ export class MapComponent implements OnInit, AfterViewInit{
     this.stopGpsWatch();
   }
 
+  formatDistance(distanceKm: number | undefined): string {
+    if (distanceKm == null) {
+      return 'N/A';
+    }
+    return distanceKm.toFixed(2) + ' km';
+  }
 
   ngAfterViewInit(): void {
     this.initMap();
@@ -72,11 +89,41 @@ export class MapComponent implements OnInit, AfterViewInit{
     const geoJsonTrack = this.trailDataService.getTracksData();
     L.geoJSON(geoJsonTrack).addTo(this.map)
     this.map.fitBounds(L.geoJSON(geoJsonTrack).getBounds());
-    const map=this.map
+
+    const coords = (geoJsonTrack as any).features[0].geometry.coordinates;
+    const trail = this.trailDataService.getTrail();
+    // start point
+    const endPoint = coords[trail.stages[0].start_idx];
+    const marker = L.marker([endPoint[1], endPoint[0]], {
+        title: 'start',
+        icon: endOfStageIcon,
+      }).addTo(this.map);
+    // Stage endpoints
+    for (const stage of trail.stages) {
+      const endPoint = coords[stage.end_idx];
+      const marker = L.marker([endPoint[1], endPoint[0]], {
+        title: stage.end_label,
+        icon: endOfStageIcon,
+      }).addTo(this.map);
+      marker.bindPopup(`<b>${stage.end_label}</b>`).openPopup();
+    }
+
+    //
+    // POIs
+    //
+    const pois = this.trailDataService.getPois();
+    for (const poi of pois) {
+      const marker = L.marker([poi.lat, poi.lon], {
+        title: poi.name,
+      }).addTo(this.map);
+      marker.bindPopup(`<b>${poi.name}</b><br>Type: ${poi.type}`).openPopup();
+    }
 
     this.map.on('dragend', () => {
         this.followMe = false;
         console.log("map moved to ",this.map.getCenter());
+        this.locationService.setMiddleOfMapAsOverride(this.map.getCenter().lat, this.map.getCenter().lng);
+
     });
   }
 
@@ -131,6 +178,7 @@ export class MapComponent implements OnInit, AfterViewInit{
     const coords = pos.coords;
     console.log(`Location: ${coords.latitude}, ${coords.longitude} (accuracy: ${coords.accuracy}m)`);
 
+    // distance to trail
     var closestPoint=0
     var closestDistance = 1e10
     const points = this.trailDataService.getTracksData().features[0].geometry.coordinates as any[]
@@ -145,15 +193,31 @@ export class MapComponent implements OnInit, AfterViewInit{
         closestDistance = distance;
       }
     }
-    this.closestDistance = Math.round(closestDistance);
+    this.closestDistance.set(Math.round(closestDistance));
     console.log("closest point is index ",closestPoint," at distance ",closestDistance," meters");
 
-    console.log(this.trailDataService.getTrail().stages)
+    // determine current stage
     for (const stage of this.trailDataService.getTrail().stages) {
       console.log()
       if (closestPoint >= stage.start_idx && closestPoint <= stage.end_idx){
         console.log("User is on stage: ",stage.name, " (",stage.id, ")");
-        this.stageName = stage.name;
+        this.currentStage.set(stage);
+        this.distanceToEndOfStage.set( this.trailDataService.computeDistance(
+          coords.latitude, coords.longitude,
+          points[stage.end_idx][1], points[stage.end_idx][0]
+        ) );
+      }
+    }
+    // distance to nearest PoI
+    this.nextPoi.set(undefined);
+    for (const poi of this.trailDataService.getPois()) {
+      if (poi.stage_id == this.currentStage()?.id && poi.idx && poi.idx > closestPoint){
+        console.log("Found PoI:", poi);
+        this.distanceToNextPoi.set( this.trailDataService.computeDistance(coords.latitude, coords.longitude,
+          poi.lat, poi.lon) );
+        this.nextPoi.set(poi);
+
+        break;
       }
     }
   }
