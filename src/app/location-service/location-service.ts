@@ -10,7 +10,7 @@ export class LocationService {
     = {latitude:33.7963722, longitude: 135.5223151, accuracy: 5};
     // = {latitude:33.819017855854305, longitude: 135.6248474121094, accuracy: 5};
   overrideEnabled = true;
-  updateGpsCallback: ((pos: any) => void ) = pos=>{};
+  updateGpsCallback: ((pos: GeolocationPosition) => void ) = pos=>{};
 
   startGpsWatch(arg0: (pos: any) => void, arg1: (err: any) => void, arg2: { enableHighAccuracy: boolean; maximumAge: number; timeout: number; }): number | null {
     this.updateGpsCallback = arg0
@@ -37,7 +37,7 @@ export class LocationService {
     if (this.overrideEnabled){
       this.overrideCoords = {latitude:lat, longitude: lng, accuracy:5};
       var dummyPos /*: GeolocationPosition*/ = {coords:this.overrideCoords, timestamp: Date.now()};
-      this.updateGpsCallback(dummyPos)
+      this.updateGpsCallback(dummyPos as GeolocationPosition)
     }
   }
 }

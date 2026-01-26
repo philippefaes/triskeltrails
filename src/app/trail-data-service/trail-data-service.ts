@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { FeatureCollection } from 'geojson';
 import tracksData from '../../assets/tracks.json';
 
 export interface Trail {
@@ -44,8 +45,8 @@ export class TrailDataService {
     return d;
   }
 
-  getTracksData(): any /*GeoJsonObject | GeoJsonObject[] */{
-    return tracksData;
+  getTracksData(): FeatureCollection /*GeoJsonObject*/  {
+    return tracksData as FeatureCollection;
   }
 
   getTrail(): Trail {

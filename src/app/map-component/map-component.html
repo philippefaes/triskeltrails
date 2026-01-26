@@ -8,7 +8,7 @@
   <p>You are near the trail, at {{closestDistance()|distance}}.</p>
 }
 @if (closestDistance() !== undefined && closestDistance()! > 250) {
-  <p>You {{ closestDistance()! | distance }} away from the trail.</p>
+  <p>You are {{ closestDistance()! | distance }} away from the trail.</p>
 }
 
 @if (currentStage() && closestDistance()! < 250) {

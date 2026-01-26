@@ -3,7 +3,8 @@ import * as L from 'leaflet';
 import { TrailDataService, Stage, Trail, PoI } from '../trail-data-service/trail-data-service';
 import { LocationService } from '../location-service/location-service';
 import { DistancePipe } from '../pipes';
-import { filter } from 'rxjs';
+
+import { LineString, Polygon } from 'geojson';
 
 const endOfStageIcon = L.divIcon({
   className: 'stage-endpoint',
@@ -54,7 +55,7 @@ export class MapComponent implements OnInit, AfterViewInit{
     this.initMap();
   }
 
-  private map: any;
+  private map?: L.Map;
 
   private initMap(): void {
     //
@@ -72,8 +73,8 @@ export class MapComponent implements OnInit, AfterViewInit{
     });
 
     const tiles = L.tileLayer(tilesUrl, {
-      maxZoom: 17,
-      minZoom: 3,
+      maxZoom: 20, // switch to 17 to save tiles
+      minZoom: 8,
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     });
 
@@ -90,7 +91,7 @@ export class MapComponent implements OnInit, AfterViewInit{
     L.geoJSON(geoJsonTrack).addTo(this.map)
     this.map.fitBounds(L.geoJSON(geoJsonTrack).getBounds());
 
-    const coords = (geoJsonTrack as any).features[0].geometry.coordinates;
+    const coords = (geoJsonTrack.features[0].geometry as LineString).coordinates;
     const trail = this.trailDataService.getTrail();
     // start point
     const endPoint = coords[trail.stages[0].start_idx];
@@ -121,8 +122,8 @@ export class MapComponent implements OnInit, AfterViewInit{
 
     this.map.on('dragend', () => {
         this.followMe = false;
-        console.log("map moved to ",this.map.getCenter());
-        this.locationService.setMiddleOfMapAsOverride(this.map.getCenter().lat, this.map.getCenter().lng);
+        console.log("map moved to ",this.map!.getCenter());
+        this.locationService.setMiddleOfMapAsOverride(this.map!.getCenter().lat, this.map!.getCenter().lng);
 
     });
   }
@@ -144,7 +145,7 @@ export class MapComponent implements OnInit, AfterViewInit{
           iconSize: [12, 12],
           iconAnchor: [6, 6],
         }),
-      }).addTo(this.map);
+      }).addTo(this.map!);
     } else {
       this.userMarker.setLatLng(latLng);
     }
@@ -181,7 +182,7 @@ export class MapComponent implements OnInit, AfterViewInit{
     // distance to trail
     var closestPoint=0
     var closestDistance = 1e10
-    const points = this.trailDataService.getTracksData().features[0].geometry.coordinates as any[]
+    const points = (this.trailDataService.getTracksData().features[0].geometry as LineString).coordinates
     for (let i=0; i<points.length; i++) {
       const point = points[i];
       const distance = this.trailDataService.computeDistance(
@@ -202,6 +203,7 @@ export class MapComponent implements OnInit, AfterViewInit{
       if (closestPoint >= stage.start_idx && closestPoint <= stage.end_idx){
         console.log("User is on stage: ",stage.name, " (",stage.id, ")");
         this.currentStage.set(stage);
+        // TODO: compute distance along trail, not "as the crow flies"
         this.distanceToEndOfStage.set( this.trailDataService.computeDistance(
           coords.latitude, coords.longitude,
           points[stage.end_idx][1], points[stage.end_idx][0]
@@ -209,10 +211,13 @@ export class MapComponent implements OnInit, AfterViewInit{
       }
     }
     // distance to nearest PoI
+
+    // TODO: only show PoI for current stage, and within 2 km?
     this.nextPoi.set(undefined);
     for (const poi of this.trailDataService.getPois()) {
       if (poi.stage_id == this.currentStage()?.id && poi.idx && poi.idx > closestPoint){
         console.log("Found PoI:", poi);
+        // TODO: compute distance along trail, not "as the crow flies"
         this.distanceToNextPoi.set( this.trailDataService.computeDistance(coords.latitude, coords.longitude,
           poi.lat, poi.lon) );
         this.nextPoi.set(poi);
