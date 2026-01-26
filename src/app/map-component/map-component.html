@@ -1,3 +1,6 @@
+@if(!isProduction){
+  <p>You are running in development mode.</p>
+}
 @if (closestDistance() === undefined) {
   <p>Location data is not available. {{ closestDistance()}}</p>
 }
@@ -20,7 +23,6 @@
   }
   </p>
 }
-
 
 <div class="map-container">
   <div class="map-frame">

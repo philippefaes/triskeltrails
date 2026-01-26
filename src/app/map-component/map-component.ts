@@ -5,6 +5,7 @@ import { LocationService } from '../location-service/location-service';
 import { DistancePipe } from '../pipes';
 
 import { LineString, Polygon } from 'geojson';
+import { environment } from 'src/environments/environment';
 
 const endOfStageIcon = L.divIcon({
   className: 'stage-endpoint',
@@ -24,7 +25,7 @@ export class MapComponent implements OnInit, AfterViewInit{
   userMarker: L.Marker|null = null;
   private readonly trailDataService = inject(TrailDataService);
   private readonly locationService = inject(LocationService);
-
+  readonly isProduction = environment.production;
   //calculated values
   closestDistance = signal<number | undefined>(undefined); // in metres
   currentStage = signal<Stage | undefined>(undefined);
@@ -73,8 +74,8 @@ export class MapComponent implements OnInit, AfterViewInit{
     });
 
     const tiles = L.tileLayer(tilesUrl, {
-      maxZoom: 20, // switch to 17 to save tiles
-      minZoom: 8,
+      maxZoom: this.isProduction ?17 : 20, // switch to 17 to save tiles
+      minZoom: this.isProduction ?10 : 2,
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     });
 

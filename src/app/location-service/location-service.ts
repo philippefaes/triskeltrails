@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -9,7 +10,9 @@ export class LocationService {
   overrideCoords /* : GeolocationCoordinates */
     = {latitude:33.7963722, longitude: 135.5223151, accuracy: 5};
     // = {latitude:33.819017855854305, longitude: 135.6248474121094, accuracy: 5};
-  overrideEnabled = true;
+
+  readonly overrideEnabled = !environment.production;
+
   updateGpsCallback: ((pos: GeolocationPosition) => void ) = pos=>{};
 
   startGpsWatch(arg0: (pos: any) => void, arg1: (err: any) => void, arg2: { enableHighAccuracy: boolean; maximumAge: number; timeout: number; }): number | null {
@@ -17,9 +20,11 @@ export class LocationService {
     return navigator.geolocation.watchPosition(
       (pos) => {
         if (this.overrideEnabled){
+          console.log("Using override coordinates");
           var dummyPos /*: GeolocationPosition*/ = {coords:this.overrideCoords, timestamp: pos.timestamp};
           arg0(dummyPos);
         } else{
+          console.log("Using live GPS coordinates");
           arg0(pos);
 
         }

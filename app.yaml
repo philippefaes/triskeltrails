@@ -1,0 +1,14 @@
+runtime: nodejs22
+
+env: standard
+
+env_variables:
+  NODE_ENV: "production"
+
+# 60 second timeout for health checks
+service_account: triskeltrails@appspot.gserviceaccount.com
+
+# Let Express server handle all requests, including static files
+handlers:
+  - url: /.*
+    script: auto
