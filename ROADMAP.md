@@ -29,16 +29,23 @@ Add meaningful POI awareness while preserving a calm, minimal interface.
 
 7.3.2.bis ✅ Compute **distance to end of entire trail** and display in map-component
 
-7.3.3 Filter POIs  
+7.3.3 ✅ Filter POIs  
 
-- Same `stage_id`
-- `dist_to_poi_m > 0`
+Only show PoIs on the map if:
 
-7.3.4 Select **next relevant POI**  
+- PoI is in the current stage (Same `stage_id`)
+- PoI is in front of us (distance to poi is > 0 )
+- PoI is not too far (distance < 2km)
+
+Have a debug flag so that we can show all PoIs during development anyway.
+
+Implemented: Smart hybrid approach — keep markers alive while in scope, create/destroy on boundary crossings.
+
+7.3.4 ✅ Select **next relevant POI**  
 
 - POI with minimum positive `dist_to_poi_m`
 
-### 7.4 UI — Text
+### 7.4 ✅ UI — Text
 
 7.4.1 Show **exactly one** POI in the UI  
 
@@ -46,31 +53,35 @@ Add meaningful POI awareness while preserving a calm, minimal interface.
 
 - Show nothing (silence is acceptable)
 
-### 7.5 UI — Map
+### 7.5 ✅ UI — Map
 
-7.5.1 Show POI markers only if one of the following is true  
+7.5.1 ✅ Show POI markers only if one of the following is true  
 
 - POI is in current stage **AND**
 - `dist_to_poi_m <= 2000`
 
-7.5.2 Always show POIs of type `bailout`
+7.5.2 ✅ Always show POIs of type `bailout`
 
-7.5.3 (Dev only) Add debug toggle  
+7.5.3 ✅ (Dev only) Add debug toggle  
 
 - “Show all POIs”
 
-### 7.6 Explicit non-goals (Step 7)
+### 7.6 ✅ Explicit non-goals (Step 7)
 
 7.6.1 No POI lists  
 7.6.2 No filtering UI  
 7.6.3 No category selection  
 7.6.4 No tap interactions
 
-## 8. Route awareness & calm behaviour
+## 8. Route awareness & calm behavior
 
 ### 8.1 Goal
 
 Make the app react intelligently when the user is near, on, or off the route — without increasing cognitive load.
+
+### 8.1.1 Pan to current location
+
+Button in the top of the map to pan/zoom to the user's location. Only show this button if the location is known. This is a standard feature in many map applications.
 
 ### 8.2 Route state machine
 

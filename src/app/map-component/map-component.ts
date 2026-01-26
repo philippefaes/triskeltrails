@@ -26,6 +26,8 @@ export class MapComponent implements OnInit, AfterViewInit{
   private readonly trailDataService = inject(TrailDataService);
   private readonly locationService = inject(LocationService);
   readonly isProduction = environment.production;
+  readonly showAllPoIs = false ;//!environment.production; // Debug flag: show all POIs in dev mode
+  private poiMarkers = new Map<string, L.Marker>(); // Track POI markers by ID
   //calculated values
   closestDistance = signal<number | undefined>(undefined); // in metres
   currentStage = signal<Stage | undefined>(undefined);
@@ -110,17 +112,7 @@ export class MapComponent implements OnInit, AfterViewInit{
       }).addTo(this.map);
       marker.bindPopup(`<b>${stage.end_label}</b>`).openPopup();
     }
-
-    //
-    // POIs
-    //
-    const pois = this.trailDataService.getPois();
-    for (const poi of pois) {
-      const marker = L.marker([poi.lat, poi.lon], {
-        title: poi.name,
-      }).addTo(this.map);
-      marker.bindPopup(`<b>${poi.name}</b><br>Type: ${poi.type}`).openPopup();
-    }
+    // POI markers will be managed dynamically in processLocation()
 
     this.map.on('dragend', () => {
         this.followMe = false;
@@ -208,18 +200,95 @@ export class MapComponent implements OnInit, AfterViewInit{
     }
     // distance to nearest PoI
 
-    // TODO: only show PoI for current stage, and within 2 km?
     this.nextPoi.set(undefined);
-    for (const poi of this.trailDataService.getPois()) {
-      if (poi.stage_id == this.currentStage()?.id && poi.idx && poi.idx > closestPoint){
-        console.log("Found PoI:", poi);
-        // Compute distance along trail to POI
-        const distanceAlongTrail = distancesToEnd[closestPoint] - distancesToEnd[poi.idx!];
-        this.distanceToNextPoi.set(distanceAlongTrail);
-        this.nextPoi.set(poi);
+    const MAX_POI_DISTANCE = 2000; // 2 km in metres
 
-        break;
+    for (const poi of this.trailDataService.getPois()) {
+      if (!poi.stage_id || !poi.idx) continue;
+
+      // Filter: same stage
+      if (poi.stage_id !== this.currentStage()?.id) continue;
+
+      // Filter: POI ahead of us
+      if (poi.idx <= closestPoint) continue;
+
+      // Compute distance along trail to POI
+      const distanceAlongTrail = distancesToEnd[closestPoint] - distancesToEnd[poi.idx];
+
+      // Filter: not too far (unless debug mode or bailout type)
+      if (!this.showAllPoIs && poi.type !== 'bailout' && distanceAlongTrail > MAX_POI_DISTANCE) {
+        continue;
+      }
+
+      console.log("Found PoI:", poi);
+      this.distanceToNextPoi.set(distanceAlongTrail);
+      this.nextPoi.set(poi);
+
+      break;
+    }
+
+    // Update POI markers visibility
+    this.updatePoiMarkers(closestPoint, distancesToEnd);
+  }
+
+  private updatePoiMarkers(closestPoint: number, distancesToEnd: number[]): void {
+    if (!this.map) return;
+
+    const MAX_POI_DISTANCE = 2000; // 2 km in metres
+    const currentStageId = this.currentStage()?.id;
+
+    for (const poi of this.trailDataService.getPois()) {
+      if (!poi.stage_id || !poi.idx) continue;
+
+      // Determine if POI should be visible
+      const shouldBeVisible = this.shouldShowPoiMarker(poi, closestPoint, distancesToEnd, MAX_POI_DISTANCE, currentStageId);
+
+      const markerExists = this.poiMarkers.has(poi.id);
+
+      if (shouldBeVisible && !markerExists) {
+        // Create marker
+        const marker = L.marker([poi.lat, poi.lon], {
+          title: poi.name,
+        }).addTo(this.map);
+        marker.bindPopup(`<b>${poi.name}</b><br>Type: ${poi.type}`);
+        this.poiMarkers.set(poi.id, marker);
+      } else if (!shouldBeVisible && markerExists) {
+        // Remove marker
+        const marker = this.poiMarkers.get(poi.id)!;
+        this.map.removeLayer(marker);
+        this.poiMarkers.delete(poi.id);
       }
     }
+  }
+
+  private shouldShowPoiMarker(
+    poi: PoI,
+    closestPoint: number,
+    distancesToEnd: number[],
+    maxDistance: number,
+    currentStageId: string | undefined
+  ): boolean {
+    // Debug mode: show all
+    if (this.showAllPoIs) {
+      return true;
+    }
+
+    // POI must be ahead of us
+    if (poi.idx! <= closestPoint) {
+      return false;
+    }
+
+    // Always show bailout type
+    if (poi.type === 'bailout') {
+      return true;
+    }
+
+    // Otherwise: same stage AND within distance
+    if (poi.stage_id === currentStageId) {
+      const distanceAlongTrail = distancesToEnd[closestPoint] - distancesToEnd[poi.idx!];
+      return Math.abs(distanceAlongTrail) <= maxDistance;
+    }
+
+    return false;
   }
 }
