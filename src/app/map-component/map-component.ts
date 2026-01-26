@@ -30,6 +30,7 @@ export class MapComponent implements OnInit, AfterViewInit{
   closestDistance = signal<number | undefined>(undefined); // in metres
   currentStage = signal<Stage | undefined>(undefined);
   distanceToEndOfStage = signal<number | undefined>(undefined); // in metres
+  distanceToEndOfTrail = signal<number | undefined>(undefined); // in metres
   nextPoi = signal<PoI | undefined>(undefined);
   distanceToNextPoi = signal<number | undefined>(undefined);
 
@@ -181,22 +182,18 @@ export class MapComponent implements OnInit, AfterViewInit{
     console.log(`Location: ${coords.latitude}, ${coords.longitude} (accuracy: ${coords.accuracy}m)`);
 
     // distance to trail
-    var closestPoint=0
-    var closestDistance = 1e10
-    const points = (this.trailDataService.getTracksData().features[0].geometry as LineString).coordinates
-    for (let i=0; i<points.length; i++) {
-      const point = points[i];
-      const distance = this.trailDataService.computeDistance(
-        coords.latitude, coords.longitude,
-        point[1], point[0]
-      );
-      if (i==0 || distance < closestDistance){
-        closestPoint = i;
-        closestDistance = distance;
-      }
-    }
+    const { idx: closestPoint, distance: closestDistance } = this.trailDataService.findClosestPointOnTrail(
+      coords.latitude,
+      coords.longitude
+    );
     this.closestDistance.set(Math.round(closestDistance));
-    console.log("closest point is index ",closestPoint," at distance ",closestDistance," meters");
+    console.log("closest point is index ", closestPoint, " at distance ", closestDistance, " meters");
+
+    // Get pre-calculated distances from each point to trail end
+    const distancesToEnd = this.trailDataService.getDistancesToEnd();
+
+    // Compute distance to end of entire trail
+    this.distanceToEndOfTrail.set(distancesToEnd[closestPoint]);
 
     // determine current stage
     for (const stage of this.trailDataService.getTrail().stages) {
@@ -204,11 +201,9 @@ export class MapComponent implements OnInit, AfterViewInit{
       if (closestPoint >= stage.start_idx && closestPoint <= stage.end_idx){
         console.log("User is on stage: ",stage.name, " (",stage.id, ")");
         this.currentStage.set(stage);
-        // TODO: compute distance along trail, not "as the crow flies"
-        this.distanceToEndOfStage.set( this.trailDataService.computeDistance(
-          coords.latitude, coords.longitude,
-          points[stage.end_idx][1], points[stage.end_idx][0]
-        ) );
+        // Compute distance along trail to end of stage
+        const distanceAlongTrail = distancesToEnd[closestPoint] - distancesToEnd[stage.end_idx];
+        this.distanceToEndOfStage.set(distanceAlongTrail);
       }
     }
     // distance to nearest PoI
@@ -218,9 +213,9 @@ export class MapComponent implements OnInit, AfterViewInit{
     for (const poi of this.trailDataService.getPois()) {
       if (poi.stage_id == this.currentStage()?.id && poi.idx && poi.idx > closestPoint){
         console.log("Found PoI:", poi);
-        // TODO: compute distance along trail, not "as the crow flies"
-        this.distanceToNextPoi.set( this.trailDataService.computeDistance(coords.latitude, coords.longitude,
-          poi.lat, poi.lon) );
+        // Compute distance along trail to POI
+        const distanceAlongTrail = distancesToEnd[closestPoint] - distancesToEnd[poi.idx!];
+        this.distanceToNextPoi.set(distanceAlongTrail);
         this.nextPoi.set(poi);
 
         break;

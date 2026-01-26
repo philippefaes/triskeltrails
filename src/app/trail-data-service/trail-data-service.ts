@@ -27,6 +27,8 @@ export interface PoI {
   providedIn: 'root',
 })
 export class TrailDataService {
+  private distancesToEndCache: number[] | null = null;
+
   // distance between two lat/lon points in metres
   computeDistance(lat1: number, lon1: number, lat2: number, lng2: number): number {
     // Haversine formula
@@ -92,5 +94,81 @@ export class TrailDataService {
         "idx": 20124
       }
     ]
+  }
+
+  /**
+   * Get cumulative distances from each polyline point to the trail end.
+   * distancesToEnd[i] = distance from point i to the end of the trail (in metres)
+   * Computed once on first access and cached.
+   */
+  getDistancesToEnd(): number[] {
+    if (this.distancesToEndCache !== null) {
+      return this.distancesToEndCache;
+    }
+
+    const tracksData = this.getTracksData();
+    if (!tracksData.features || tracksData.features.length === 0) {
+      return [];
+    }
+
+    const feature = tracksData.features[0];
+    const polyline = (feature.geometry as any).coordinates as [number, number][];
+
+    if (!polyline || polyline.length === 0) {
+      return [];
+    }
+
+    // Compute cumulative distances from each point to the end
+    const distances = new Array(polyline.length).fill(0);
+
+    // Start from the end and work backwards
+    for (let i = polyline.length - 2; i >= 0; i--) {
+      const distance = this.computeDistance(
+        polyline[i][1],
+        polyline[i][0],
+        polyline[i + 1][1],
+        polyline[i + 1][0]
+      );
+      distances[i] = distances[i + 1] + distance;
+    }
+
+    this.distancesToEndCache = distances;
+    return distances;
+  }
+
+  /**
+   * Find the closest point on the trail to the given coordinates.
+   * Returns the index and distance to that point.
+   */
+  findClosestPointOnTrail(lat: number, lon: number): { idx: number; distance: number } {
+    const tracksData = this.getTracksData();
+    if (!tracksData.features || tracksData.features.length === 0) {
+      return { idx: 0, distance: 0 };
+    }
+
+    const feature = tracksData.features[0];
+    const polyline = (feature.geometry as any).coordinates as [number, number][];
+
+    if (!polyline || polyline.length === 0) {
+      return { idx: 0, distance: 0 };
+    }
+
+    let closestIdx = 0;
+    let closestDistance = Infinity;
+
+    for (let i = 0; i < polyline.length; i++) {
+      const distance = this.computeDistance(
+        lat,
+        lon,
+        polyline[i][1],
+        polyline[i][0]
+      );
+      if (distance < closestDistance) {
+        closestIdx = i;
+        closestDistance = distance;
+      }
+    }
+
+    return { idx: closestIdx, distance: closestDistance };
   }
 }

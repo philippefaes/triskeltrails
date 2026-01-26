@@ -17,7 +17,12 @@
 @if (currentStage() && closestDistance()! < 250) {
   <p>
   Current stage: {{ currentStage()?.name }}.
-  == Distance to {{ currentStage()?.end_label }} is {{ distanceToEndOfStage() | distance }}.
+  @if (distanceToEndOfStage() == distanceToEndOfTrail()){
+    == Distance to end of trail ({{ currentStage()?.end_label }}) is {{ distanceToEndOfTrail() | distance }}.
+  }@else{
+    == Distance to {{ currentStage()?.end_label }} is {{ distanceToEndOfStage() | distance }}.
+    == Distance to end of trail is {{ distanceToEndOfTrail() | distance }}.
+  }
   @if (nextPoi()){
     == Next point of interest: {{ nextPoi()?.name || 'none' }} at {{ distanceToNextPoi() | distance }}.
   }
