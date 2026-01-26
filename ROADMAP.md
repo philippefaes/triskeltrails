@@ -79,7 +79,7 @@ Implemented: Smart hybrid approach — keep markers alive while in scope, create
 
 Make the app react intelligently when the user is near, on, or off the route — without increasing cognitive load.
 
-### 8.1.1 Pan to current location
+### 8.1.1 ✅ Pan to current location
 
 Button in the top of the map to pan/zoom to the user's location. Only show this button if the location is known. This is a standard feature in many map applications.
 

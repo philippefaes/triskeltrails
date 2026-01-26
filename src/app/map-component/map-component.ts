@@ -60,6 +60,7 @@ export class MapComponent implements OnInit, AfterViewInit{
   }
 
   private map?: L.Map;
+  private userLatLng: L.LatLng | null = null;
 
   private initMap(): void {
     //
@@ -131,6 +132,7 @@ export class MapComponent implements OnInit, AfterViewInit{
 
   private updateUserLocation(lat: number, lng: number, accuracyM: number): void {
     const latLng: L.LatLngExpression = [lat, lng];
+    this.userLatLng = L.latLng(lat, lng); // Store for pan-to-location
     if (!this.userMarker) {
       this.userMarker = L.marker(latLng,
         {icon: L.divIcon({
@@ -290,5 +292,13 @@ export class MapComponent implements OnInit, AfterViewInit{
     }
 
     return false;
+  }
+
+  public panToUserLocation(): void {
+    if (this.map && this.userLatLng) {
+      this.map.panTo(this.userLatLng);
+      this.map.setZoom(15);
+      this.followMe = true;
+    }
   }
 }

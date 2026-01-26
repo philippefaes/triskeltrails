@@ -31,6 +31,9 @@
 
 <div class="map-container">
   <div class="map-frame">
+    @if (closestDistance() !== undefined) {
+      <button (click)="panToUserLocation()" class="pan-button" title="Center map on current location">📍</button>
+    }
     <div id="map"></div>
   </div>
 </div>
