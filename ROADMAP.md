@@ -75,102 +75,58 @@ Implemented: Smart hybrid approach — keep markers alive while in scope, create
 
 ## 8. Route awareness & calm behavior
 
-### 8.1 Goal
+### 8.1 Distance to route (MVP)
 
-Make the app react intelligently when the user is near, on, or off the route — without increasing cognitive load.
+8.1.1 Compute `distanceToRouteM` as haversine to nearest route point.  
+8.1.2 (Later) Replace with nearest point on segment for better accuracy.  
 
-### 8.1.1 ✅ Pan to current location
+### 8.2 State machine
 
-Button in the top of the map to pan/zoom to the user's location. Only show this button if the location is known. This is a standard feature in many map applications.
+8.2.1 Compute `effectiveDistanceM = distanceToRouteM - gpsAccuracyM`.  
+8.2.2 Define:
 
-### 8.2 Route state machine
+- ON_ROUTE: `effectiveDistanceM <= 50`  
+- NEAR_ROUTE: `50 < effectiveDistanceM <= 250`  
+- OFF_ROUTE: `effectiveDistanceM > 250`  
 
-8.2.1 Define three route states  
+### 8.3 Behavior per state
 
-- **ON_ROUTE**
-  - `effectiveDistance <= 50 m`
-- **NEAR_ROUTE**
-  - `50 m < effectiveDistance <= 250 m`
-- **OFF_ROUTE**
-  - `effectiveDistance > 250 m`
+8.3.1 ON_ROUTE:
 
-8.2.2 Compute effective distance  
+- show stage + distances + next POI  
+- map auto-follow enabled (`panTo`)  
 
-effectiveDistance = distanceToRouteM - gpsAccuracyM
+8.3.2 NEAR_ROUTE:
 
-### 8.3 Behaviour per route state
+- show stage + distances + next POI  
+- show subtle warning text (“GPS uncertain / near route”)  
+- map auto-follow disabled  
 
-#### 8.3.1 ON_ROUTE
+8.3.3 OFF_ROUTE:
 
-8.3.1.1 Show:
-- Current stage
-- Distance to stage end
-- Next POI (if available)
+- show only off-route message + distance to route  
+- hide stage distance + POI info  
+- map auto-follow disabled  
+- show button “Show route” (pan/zoom to nearest route point)  
 
-8.3.1.2 Map behaviour
-- Auto-follow user position (`panTo`)
+### 8.4 Reduce flicker
 
-#### 8.3.2 NEAR_ROUTE
+8.4.1 Only update UI when route state changes OR progress changes beyond a threshold.  
+8.4.2 Consider throttling GPS updates to UI (e.g., 1–2s) while still collecting fixes.  
 
-8.3.2.1 Show same info as ON_ROUTE
+### 8.5 Non-goals
 
-8.3.2.2 Add subtle warning text  
-GPS uncertain / near route
+8.5.1 Do not implement rerouting.  
+8.5.2 Do not implement turn-by-turn.  
+8.5.3 Do not add alerts/notifications.  
+8.5.4 Do not add settings/config screens.  
 
-8.3.2.3 Disable auto-follow
-
-#### 8.3.3 OFF_ROUTE
-
-8.3.3.1 Replace stage info with:
-You are not on the route
-Distance to route: X km
-
-8.3.3.2 Hide:
-
-- Stage distance
-- POI information
-
-8.3.3.3 Map behaviour
-
-- Disable auto-follow
-- Keep route visible
-
-8.3.3.4 Add one action button
-
-- “Show route” → pan/zoom to nearest route point
-
-
-### 8.4 Technical integration
-
-8.4.1 Compute `distanceToRouteM` 
-
-- MVP: haversine distance to nearest polyline point
-
-8.4.2 Integrate route state logic into GPS update pipeline
-
-8.4.3 Update UI **only when route state changes**  
-
-- Prevent flicker and unnecessary re-renders
-
-### 8.5 Explicit non-goals (Step 8)
-
-8.5.1 No rerouting  
-8.5.2 No turn-by-turn navigation  
-8.5.3 No alerts, sounds, or vibrations  
-8.5.4 No user configuration
-
+---
 
 ## 9. Acceptance criteria (MVP sanity check)
 
-### 9.1 App never shows confident distances when in OFF_ROUTE state  
-
-### 9.2 App never asks the user to configure anything  
-
-### 9.3 UI never shows more than:
-
-- One stage
-- One POI
-
-### 9.4 App remains useful even when there are zero POIs  
-
-### 9.5 All functionality works without network after initial load (offline handling to be added later)
+9.1 App never shows confident stage distances in OFF_ROUTE.  
+9.2 UI shows at most one stage and one POI.  
+9.3 The app does not require any user configuration.  
+9.4 With 0 POIs, the app remains calm and usable.  
+9.5 GPS denial gracefully falls back to a fixed demo location.  

@@ -1,33 +1,37 @@
 import { Injectable } from '@angular/core';
 import { FeatureCollection } from 'geojson';
 import tracksData from '../../assets/tracks.json';
+import { Trail, PoI, Stage, TrailModel } from '../models/trail-model';
 
-export interface Trail {
-  route_id: string,
-  stages: Stage[]
-}
-export interface Stage {
-  id: string,
-  name: string,
-  start_idx: number,
-  end_idx: number,
-  end_label: string,
-}
-
-export interface PoI {
-  id: string,
-  type: string,
-  name: string,
-  lat: number,
-  lon: number,
-  stage_id: string,
-  idx?: number,
-}
 @Injectable({
   providedIn: 'root',
 })
 export class TrailDataService {
   private distancesToEndCache: number[] | null = null;
+  private trailModel = new TrailModel();
+
+  computeDistanceToEndOfStage(closestPoint: number, currentStage: Stage | undefined) : number | undefined {
+    if (!currentStage) return undefined
+    const distancesToEnd = this.getDistancesToEnd();
+    return  distancesToEnd[closestPoint] - distancesToEnd[currentStage.end_idx];
+  }
+
+  getCurrentStage(closestPoint: number) : Stage | undefined {
+    const trail = this.getTrail();
+    for (const stage of trail.stages) {
+      if (closestPoint >= stage.start_idx && closestPoint <= stage.end_idx) {
+        return stage;
+      }
+    }
+    return undefined;
+  }
+
+  distanceToEnd(coords: GeolocationCoordinates) {
+    const closestPointData = this.findClosestPointOnTrail(coords.latitude, coords.longitude);
+    const distancesToEnd = this.getDistancesToEnd();
+    const distanceToEndOfTrail = distancesToEnd[closestPointData.idx];
+    return distanceToEndOfTrail;
+  }
 
   // distance between two lat/lon points in metres
   computeDistance(lat1: number, lon1: number, lat2: number, lng2: number): number {
@@ -52,48 +56,20 @@ export class TrailDataService {
   }
 
   getTrail(): Trail {
-      return{
-        "route_id": "kodo-nakahechi-classic-v1",
-        "stages": [
-          {
-            "id": "S01",
-            "name": "Takijiri → Takahara",
-            "start_idx": 0,
-            "end_idx": 12000,
-            "end_label": "Takahara"
-          },
-          {
-            "id": "S02",
-            "name": "Takahara → Chikatsuyu",
-            "start_idx": 12001,
-            "end_idx": 24909,
-            "end_label": "Chikatsuyu"
-          }
-        ]
-      }
+    return this.trailModel.getTrail()
   }
 
   getPois(): PoI[] {
-    return [
-      {
-        "id": "water-01",
-        "type": "water",
-        "name": "Water point",
-        "lat": 33.79508617900561,
-        "lon": 135.5304551124573,
-        "stage_id": "S01",
-        "idx": 7154
-      },
-      {
-        "id": "bus-01",
-        "type": "bailout",
-        "name": "Bus stop",
-        "lat": 33.81434258967535,
-        "lon": 135.6057929992676,
-        "stage_id": "S02",
-        "idx": 20124
-      }
-    ]
+    return this.trailModel.getPois()
+  }
+
+  computeDistanceToEndFromPointIndex(pointIdx: number): number {
+    const distancesToEnd = this.getDistancesToEnd();
+    if (pointIdx < 0 || pointIdx >= distancesToEnd.length) {
+      console.error("computeDistanceToEndFromPointIndex: pointIdx out of range ", pointIdx);
+      return 0;
+    }
+    return distancesToEnd[pointIdx];
   }
 
   /**
@@ -141,6 +117,7 @@ export class TrailDataService {
    * Returns the index and distance to that point.
    */
   findClosestPointOnTrail(lat: number, lon: number): { idx: number; distance: number } {
+
     const tracksData = this.getTracksData();
     if (!tracksData.features || tracksData.features.length === 0) {
       return { idx: 0, distance: 0 };
