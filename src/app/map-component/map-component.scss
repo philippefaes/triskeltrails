@@ -4,7 +4,8 @@
   position: fixed;
   inset: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
   margin: 0;
   z-index: 0;
   font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
@@ -14,7 +15,8 @@
 
 .map-frame {
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
   position: relative;
   border: none;
   overflow: hidden;
@@ -22,7 +24,8 @@
 
 #map {
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
   z-index: 1;
 }
 
@@ -101,8 +104,8 @@
 
 .pan-button {
   position: absolute;
-  right: 24px;
-  bottom: 24px;
+  right: max(24px, env(safe-area-inset-right));
+  bottom: max(24px, env(safe-area-inset-bottom));
   z-index: 1001;
   padding: 0;
   width: 48px;
