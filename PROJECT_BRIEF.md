@@ -28,6 +28,9 @@ A calm, minimalist trail companion for a single pilgrimage route: it shows where
    - one “next POI”
 5. Silence is acceptable (if no POI, show nothing extra).
 6. The app must react differently when the user is off-route.
+7. The full route polyline is always rendered on the map.
+   Stages never control map visibility; they are semantic only.
+
 
 ## 5) MVP scope
 
@@ -50,6 +53,9 @@ A calm, minimalist trail companion for a single pilgrimage route: it shows where
 6. Route state machine:
    - ON_ROUTE / NEAR_ROUTE / OFF_ROUTE
    - change UI + map behavior accordingly
+7. The map always shows the complete route, regardless of:
+   - current stage
+   - route state (ON / NEAR / OFF)
 
 ### Explicitly out of scope (MVP)
 
@@ -116,6 +122,8 @@ Behavior:
   - hide stage distance + POI info
   - map does NOT follow
   - one button: “Show route” (pan/zoom to nearest route point)
+  - Route remains visible
+  - Only _user marker behavior_ and _UI text_ change
 
 ## 8) Distance policy (important)
 

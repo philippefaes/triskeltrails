@@ -1,0 +1,54 @@
+{
+  "route_id": "Via Scaldea Classic v1",
+  "stages": [
+    {
+      "id": "S01",
+      "name": "Vlissingen → Ijserdijke",
+      "start_idx": 0,
+      "end_idx": 380,
+      "end_label": "Ijserdijke"
+    },
+    {
+      "id": "S02",
+      "name": "Ijserdijke → Gent",
+      "start_idx": 380,
+      "end_idx": 1500,
+      "end_label": "Gent"
+    },
+    {
+      "id": "S03",
+      "name": "Gent → Gavere",
+      "start_idx": 1500,
+      "end_idx": 2320,
+      "end_label": "Gavere"
+    },
+    {
+      "id": "S03",
+      "name": "Gent → Gavere",
+      "start_idx": 1500,
+      "end_idx": 2900,
+      "end_label": "Oudenaarde"
+    },
+    {
+      "id": "S03",
+      "name": "Gavere → Tournai",
+      "start_idx": 1500,
+      "end_idx": 3800,
+      "end_label": "Tournai"
+    },
+    {
+      "id": "S03",
+      "name": "Tournai → Saint-Amand-Les-Eaux",
+      "start_idx": 3800,
+      "end_idx": 4277  ,
+      "end_label": "Saint-Amand-Les-Eaux"
+    },
+    {
+      "id": "S99",
+      "name": "Gavere → Saint Quentin",
+      "start_idx": 4000,
+      "end_idx": 6345,
+      "end_label": "Saint Quentin"
+    }
+  ]
+}

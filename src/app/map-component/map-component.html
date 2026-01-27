@@ -22,7 +22,7 @@
               }
             }
           </div>
-          @if (currentStage() && closestDistance()! < 250) {
+          @if (currentStage()) {
             <div class="stage-info">
               <span class="stage-label">Stage:</span> <span class="stage-name">{{ currentStage()?.name }}</span>
               <span class="distance-label">•</span>

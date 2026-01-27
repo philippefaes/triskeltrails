@@ -1,0 +1,19 @@
+{
+  "route_id": "kodo-nakahechi-classic-v1",
+  "stages": [
+    {
+      "id": "S01",
+      "name": "Takijiri → Takahara",
+      "start_idx": 0,
+      "end_idx": 12000,
+      "end_label": "Takahara"
+    },
+    {
+      "id": "S02",
+      "name": "Takahara → Chikatsuyu",
+      "start_idx": 12001,
+      "end_idx": 24909,
+      "end_label": "Chikatsuyu"
+    }
+  ]
+}

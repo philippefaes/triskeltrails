@@ -99,10 +99,12 @@ export class MapComponent implements OnInit, AfterViewInit{
     const geoJsonTrack = this.trailModel.getTracksData();
     L.geoJSON(geoJsonTrack).addTo(this.map)
     this.map.fitBounds(L.geoJSON(geoJsonTrack).getBounds());
-    const coords = (geoJsonTrack.features[0].geometry as LineString).coordinates;
-    const trail = this.trailModel.getTrail();
+    const coords = this.trailDataService.getPolyLine()
+    const trail = this.trailModel.getStages();
 
     // Start point
+    console.log("stages:", trail.stages);
+    console.log("available coords:", coords.length);
     const endPoint = coords[trail.stages[0].start_idx];
     this.createStageEndMarker('Start', endPoint);
     // Stage endpoints
@@ -120,6 +122,7 @@ export class MapComponent implements OnInit, AfterViewInit{
   }
 
   private createStageEndMarker(name: string, coord: number[]): void {
+    console.log
     const marker = L.marker([coord[1], coord[0]], {
         title: name,
         icon: endOfStageIcon,

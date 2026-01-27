@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { FeatureCollection } from 'geojson';
-import tracksData from '../../assets/tracks.json';
+// const trailname = 'nakahechi';
+import tracksData from '../../assets/scaldea/tracks.json';
+import pois from '../../assets/nakahechi/pois.json';
+import stages from '../../assets/scaldea/stages.json';
 
 export interface Trail {
   route_id: string,
@@ -51,47 +54,11 @@ export class TrailModel {
     return tracksData as FeatureCollection;
   }
 
-  getTrail(): Trail {
-    return{
-      "route_id": "kodo-nakahechi-classic-v1",
-      "stages": [
-        {
-          "id": "S01",
-          "name": "Takijiri → Takahara",
-          "start_idx": 0,
-          "end_idx": 12000,
-          "end_label": "Takahara"
-        },
-        {
-          "id": "S02",
-          "name": "Takahara → Chikatsuyu",
-          "start_idx": 12001,
-          "end_idx": 24909,
-          "end_label": "Chikatsuyu"
-        }
-      ]
-    }
+  getStages(): Trail {
+    return stages as Trail;
   }
+
   getPois(): PoI[] {
-    return [
-      {
-        "id": "water-01",
-        "type": "water",
-        "name": "Water point",
-        "lat": 33.79508617900561,
-        "lon": 135.5304551124573,
-        "stage_id": "S01",
-        "idx": 7154
-      },
-      {
-        "id": "bus-01",
-        "type": "bailout",
-        "name": "Bus stop",
-        "lat": 33.81434258967535,
-        "lon": 135.6057929992676,
-        "stage_id": "S02",
-        "idx": 20124
-      }
-    ];
+    return pois as PoI[];
   }
 }

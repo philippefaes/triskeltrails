@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { FeatureCollection } from 'geojson';
-import tracksData from '../../assets/tracks.json';
+import { FeatureCollection, LineString, MultiLineString } from 'geojson';
 import { Trail, PoI, Stage, TrailModel } from '../models/trail-model';
 
 @Injectable({
@@ -52,11 +51,11 @@ export class TrailDataService {
   }
 
   getTracksData(): FeatureCollection /*GeoJsonObject*/  {
-    return tracksData as FeatureCollection;
+    return this.trailModel.getTracksData();
   }
 
   getTrail(): Trail {
-    return this.trailModel.getTrail()
+    return this.trailModel.getStages()
   }
 
   getPois(): PoI[] {
@@ -82,17 +81,7 @@ export class TrailDataService {
       return this.distancesToEndCache;
     }
 
-    const tracksData = this.getTracksData();
-    if (!tracksData.features || tracksData.features.length === 0) {
-      return [];
-    }
-
-    const feature = tracksData.features[0];
-    const polyline = (feature.geometry as any).coordinates as [number, number][];
-
-    if (!polyline || polyline.length === 0) {
-      return [];
-    }
+    const polyline = this.getPolyLine();
 
     // Compute cumulative distances from each point to the end
     const distances = new Array(polyline.length).fill(0);
@@ -118,14 +107,8 @@ export class TrailDataService {
    */
   findClosestPointOnTrail(lat: number, lon: number): { idx: number; distance: number } {
 
-    const tracksData = this.getTracksData();
-    if (!tracksData.features || tracksData.features.length === 0) {
-      return { idx: 0, distance: 0 };
-    }
-
-    const feature = tracksData.features[0];
-    const polyline = (feature.geometry as any).coordinates as [number, number][];
-
+    
+    const polyline = this.getPolyLine();
     if (!polyline || polyline.length === 0) {
       return { idx: 0, distance: 0 };
     }
@@ -147,5 +130,22 @@ export class TrailDataService {
     }
 
     return { idx: closestIdx, distance: closestDistance };
+  }
+
+  getPolyLine() : [number, number][] {
+    const tracksData = this.getTracksData();
+    if (!tracksData.features || tracksData.features.length === 0) {
+      return [];  
+    }
+    const feature = tracksData.features[0];
+      var polyline :[number, number][] = [];
+    if (feature.geometry.type == 'LineString') {
+      polyline = (feature.geometry as LineString).coordinates as [number, number][];
+    }else if (feature.geometry.type == 'MultiLineString') {
+      polyline = (feature.geometry as MultiLineString).coordinates[0] as [number, number][];
+    }else{
+      return []
+    }
+    return polyline
   }
 }

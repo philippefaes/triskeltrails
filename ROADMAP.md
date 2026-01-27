@@ -89,7 +89,7 @@ Implemented: Smart hybrid approach — keep markers alive while in scope, create
 - NEAR_ROUTE: `50 < effectiveDistanceM <= 250`  
 - OFF_ROUTE: `effectiveDistanceM > 250`  
 
-### 8.3 Behavior per state
+### 8.3 ✅ Behavior per state
 
 8.3.1 ON_ROUTE:
 
@@ -114,7 +114,7 @@ Implemented: Smart hybrid approach — keep markers alive while in scope, create
 8.4.1 Only update UI when route state changes OR progress changes beyond a threshold.  
 8.4.2 Consider throttling GPS updates to UI (e.g., 1–2s) while still collecting fixes.  
 
-### 8.5 Non-goals
+### 8.5 ✅ Non-goals
 
 8.5.1 Do not implement rerouting.  
 8.5.2 Do not implement turn-by-turn.  
@@ -123,10 +123,11 @@ Implemented: Smart hybrid approach — keep markers alive while in scope, create
 
 ---
 
-## 9. Acceptance criteria (MVP sanity check)
+## 9. ✅ Acceptance criteria (MVP sanity check)
 
 9.1 App never shows confident stage distances in OFF_ROUTE.  
 9.2 UI shows at most one stage and one POI.  
 9.3 The app does not require any user configuration.  
 9.4 With 0 POIs, the app remains calm and usable.  
 9.5 GPS denial gracefully falls back to a fixed demo location.  
+

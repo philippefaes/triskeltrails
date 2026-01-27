@@ -1,0 +1,20 @@
+ [
+      {
+        "id": "water-01",
+        "type": "water",
+        "name": "Water point",
+        "lat": 33.79508617900561,
+        "lon": 135.5304551124573,
+        "stage_id": "S01",
+        "idx": 7154
+      },
+      {
+        "id": "bus-01",
+        "type": "bailout",
+        "name": "Bus stop",
+        "lat": 33.81434258967535,
+        "lon": 135.6057929992676,
+        "stage_id": "S02",
+        "idx": 20124
+      }
+]
