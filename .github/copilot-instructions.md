@@ -54,3 +54,11 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Design services around a single responsibility
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
+
+## Project Brief
+
+The general project info is in PROJECT_BRIEF.md. Do read this document first to understand the project goals and constraints.
+
+Find the project structure described in ARCHITECTURE.md and follow it closely when making architectural decisions.
+
+Next features are tracked in ROADMAP.md. Check it for the current status and next steps.

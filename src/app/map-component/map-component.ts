@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, inject, OnInit, Pipe, signal } from '@angular/core';
+import { RouteStateService, RouteState } from '../services/route-state.service';
 import * as L from 'leaflet';
 import { Stage, PoI } from '../models/trail-model';
 import { LocationService } from '../services/location-service';
@@ -31,6 +32,7 @@ export class MapComponent implements OnInit, AfterViewInit{
   private readonly poiMarkerService = inject(PoiMarkerService);
   private readonly trailModel = new TrailModel();
   private readonly trailDataService = inject(TrailDataService);
+  private readonly routeStateService = inject(RouteStateService);
   readonly isProduction = environment.production;
   readonly showAllPoIs = false ;//!environment.production; // Debug flag: show all POIs in dev mode
 
@@ -43,6 +45,7 @@ export class MapComponent implements OnInit, AfterViewInit{
   distanceToEndOfTrail = signal<number | undefined>(undefined); // in metres
   nextPoi = signal<PoI | undefined>(undefined);
   distanceToNextPoi = signal<number | undefined>(undefined);
+  routeState = signal<RouteState | undefined>(undefined);
 
 
   followMe = false;
@@ -75,7 +78,8 @@ export class MapComponent implements OnInit, AfterViewInit{
 
     this.map = L.map('map', {
       center: [33.8407298,135.7735975],
-      zoom: 10
+      zoom: 10,
+      zoomControl: false
     });
 
     const tiles = L.tileLayer(tilesUrl, {
@@ -180,6 +184,10 @@ export class MapComponent implements OnInit, AfterViewInit{
       this.trailDataService.findClosestPointOnTrail(currentCoords.latitude, currentCoords.longitude);
     this.closestDistance.set(Math.round(closestDistance));
     console.log("closest point is index ", closestPoint, " at distance ", closestDistance, " meters");
+
+    // Compute route state using RouteStateService
+    const routeState = this.routeStateService.getRouteState(closestDistance, currentCoords.accuracy);
+    this.routeState.set(routeState);
 
     this.distanceToEndOfTrail.set(this.trailDataService.distanceToEnd(currentCoords));
 

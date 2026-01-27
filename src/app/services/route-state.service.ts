@@ -27,7 +27,7 @@ export class RouteStateService {
    * Effective distance = distance to route - GPS accuracy
    */
   getRouteState(distanceToRouteM: number, gpsAccuracyM: number): RouteState {
-    const effectiveDistance = distanceToRouteM - gpsAccuracyM;
+    const effectiveDistance = distanceToRouteM - (gpsAccuracyM ?? 0);
 
     if (effectiveDistance <= this.ON_ROUTE_THRESHOLD) {
       return RouteState.ON_ROUTE;

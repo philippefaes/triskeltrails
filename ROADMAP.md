@@ -75,12 +75,12 @@ Implemented: Smart hybrid approach — keep markers alive while in scope, create
 
 ## 8. Route awareness & calm behavior
 
-### 8.1 Distance to route (MVP)
+### 8.1 ✅ Distance to route (MVP)
 
 8.1.1 Compute `distanceToRouteM` as haversine to nearest route point.  
 8.1.2 (Later) Replace with nearest point on segment for better accuracy.  
 
-### 8.2 State machine
+### 8.2 ✅ State machine
 
 8.2.1 Compute `effectiveDistanceM = distanceToRouteM - gpsAccuracyM`.  
 8.2.2 Define:

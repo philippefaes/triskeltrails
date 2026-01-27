@@ -1,38 +1,54 @@
-@if(!isProduction){
-  <p>You are running in development mode.</p>
-}
-@if (closestDistance() === undefined) {
-  <p>Location data is not available. {{ closestDistance()}}</p>
-}
-@if (closestDistance() !== undefined && closestDistance()! < 20) {
-  <p>You are on the trail.</p>
-}
-@if (closestDistance() !== undefined && 20 <= closestDistance()! && closestDistance()! < 250) {
-  <p>You are near the trail, at {{closestDistance()|distance}}.</p>
-}
-@if (closestDistance() !== undefined && closestDistance()! > 250) {
-  <p>You are {{ closestDistance()! | distance }} away from the trail.</p>
-}
-
-@if (currentStage() && closestDistance()! < 250) {
-  <p>
-  Current stage: {{ currentStage()?.name }}.
-  @if (distanceToEndOfStage() == distanceToEndOfTrail()){
-    == Distance to end of trail ({{ currentStage()?.end_label }}) is {{ distanceToEndOfTrail() | distance }}.
-  }@else{
-    == Distance to {{ currentStage()?.end_label }} is {{ distanceToEndOfStage() | distance }}.
-    == Distance to end of trail is {{ distanceToEndOfTrail() | distance }}.
-  }
-  @if (nextPoi()){
-    == Next point of interest: {{ nextPoi()?.name || 'none' }} at {{ distanceToNextPoi() | distance }}.
-  }
-  </p>
-}
 
 <div class="map-container">
   <div class="map-frame">
+    <div class="map-overlay" [class.dev-mode]="!isProduction">
+      @if (closestDistance() === undefined) {
+        <div class="info-block">Location data is not available.</div>
+      }@else {
+        <div class="info-block">
+          <div class="route-state">
+            @switch(routeState()) {
+              @case('ON_ROUTE') {
+                <span class="state-icon on-route" aria-label="On route">🟢</span>
+                <span>You are on the trail</span>
+              }
+              @case('NEAR_ROUTE') {
+                <span class="state-icon near-route" aria-label="Near route">🟡</span>
+                <span>Near trail: {{closestDistance()|distance}}</span>
+              }
+              @case('OFF_ROUTE') {
+                <span class="state-icon off-route" aria-label="Off route">🔴</span>
+                <span>Off trail: {{ closestDistance()! | distance }}</span>
+              }
+            }
+          </div>
+          @if (currentStage() && closestDistance()! < 250) {
+            <div class="stage-info">
+              <span class="stage-label">Stage:</span> <span class="stage-name">{{ currentStage()?.name }}</span>
+              <span class="distance-label">•</span>
+              @if (distanceToEndOfStage() == distanceToEndOfTrail()){
+                <span>To end ({{ currentStage()?.end_label }}): <b>{{ distanceToEndOfTrail() | distance }}</b></span>
+              }@else{
+                <span>To {{ currentStage()?.end_label }}: <b>{{ distanceToEndOfStage() | distance }}</b></span>
+                <span class="distance-label">•</span>
+                <span>Trail end: <b>{{ distanceToEndOfTrail() | distance }}</b></span>
+              }
+              @if (nextPoi()){
+                <span class="distance-label">•</span>
+                <span>Next POI: <b>{{ nextPoi()?.name || 'none' }}</b> ({{ distanceToNextPoi() | distance }})</span>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
     @if (closestDistance() !== undefined) {
-      <button (click)="panToUserLocation()" class="pan-button" title="Center map on current location">📍</button>
+      <button (click)="panToUserLocation()" class="pan-button" title="Center map on current location" aria-label="Center map on current location">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="14" cy="14" r="10" stroke="#1976d2" stroke-width="3" fill="none"/>
+          <circle cx="14" cy="14" r="4" fill="#1976d2"/>
+        </svg>
+      </button>
     }
     <div id="map"></div>
   </div>

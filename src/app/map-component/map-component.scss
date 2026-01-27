@@ -1,45 +1,133 @@
+
+
 .map-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  margin: 30px;
-  margin-top: 70px;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  z-index: 0;
+  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .map-frame {
-  border: 2px solid black;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   position: relative;
+  border: none;
+  overflow: hidden;
 }
 
 #map {
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+
+.map-overlay {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(95vw, 600px);
+  margin: 0 auto;
+  z-index: 10;
+  padding: 16px 20px 8px 20px;
+  background: rgba(255,255,255,0.92);
+  border-radius: 0 0 18px 18px;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.10);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  transition: background 0.2s;
+}
+.map-overlay.dev-mode {
+  background: rgba(180, 180, 180, 0.92);
+}
+
+.dev-banner {
+  background: #e0e0e0;
+  color: #333;
+  font-size: 13px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.info-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 1.08rem;
+  color: #222;
+  font-weight: 500;
+}
+
+.route-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  margin-bottom: 2px;
+}
+.state-icon {
+  font-size: 1.3em;
+  vertical-align: middle;
+}
+.on-route { color: #1ca01c; }
+.near-route { color: #e6b800; }
+.off-route { color: #d32f2f; }
+
+.stage-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: 1rem;
+  margin-top: 2px;
+}
+.stage-label, .distance-label {
+  color: #888;
+  font-size: 0.98em;
+}
+.stage-name {
+  font-weight: 600;
 }
 
 .pan-button {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 1000;
-  padding: 8px 12px;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1001;
+  padding: 0;
+  width: 48px;
+  height: 48px;
   background: white;
-  border: 2px solid #333;
-  border-radius: 4px;
+  border: 2px solid #1976d2;
+  border-radius: 50%;
   cursor: pointer;
-  font-size: 18px;
-  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
+  transition: background-color 0.2s, border-color 0.2s;
+
+  svg {
+    display: block;
+  }
 
   &:hover {
-    background-color: #f0f0f0;
+    background-color: #e3f2fd;
+    border-color: #1565c0;
   }
 
   &:active {
-    background-color: #e0e0e0;
+    background-color: #bbdefb;
+    border-color: #0d47a1;
   }
-}
-
-p {
-  margin: 5px 30px 0 30px;
 }
