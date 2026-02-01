@@ -102,8 +102,6 @@ export class MapComponent implements OnInit, AfterViewInit{
     const trail = this.trailModel.getStages();
 
     // Start point
-    console.log("stages:", trail.stages);
-    console.log("available coords:", coords.length);
     const endPoint = coords[trail.stages[0].start_idx];
     this.createStageEndMarker('Start', endPoint);
     // Stage endpoints
@@ -116,12 +114,10 @@ export class MapComponent implements OnInit, AfterViewInit{
         this.followMe = false;
         console.log("map moved to ",this.map!.getCenter());
         this.locationService.setMiddleOfMapAsOverride(this.map!.getCenter().lat, this.map!.getCenter().lng);
-
     });
   }
 
   private createStageEndMarker(name: string, coord: number[]): void {
-    console.log
     const marker = L.marker([coord[1], coord[0]], {
         title: name,
         icon: endOfStageIcon,
@@ -156,7 +152,6 @@ export class MapComponent implements OnInit, AfterViewInit{
 
   }
   public startGpsWatch() {
-    console.log("Polling location...");
     this.watchId = this.locationService.startGpsWatch(
       (pos:any) => {
         //const coords = this.overrideCoords? this.overrideCoords : pos.coords
@@ -179,7 +174,6 @@ export class MapComponent implements OnInit, AfterViewInit{
   processLocation(pos: GeolocationPosition): void {
     if(!this.map) return;
     const currentCoords = pos.coords;
-    console.log(`Location: ${currentCoords.latitude}, ${currentCoords.longitude} (accuracy: ${currentCoords.accuracy}m)`);
 
     // distance to trail
     const { idx: closestPoint, distance: closestDistance } =
@@ -211,7 +205,9 @@ export class MapComponent implements OnInit, AfterViewInit{
     this.poiMarkerService.updatePoiMarkers(
       this.map,
       closestPoint,
-      this.currentStage()?.id
+      this.currentStage()?.id,
+      closestDistance,
+      currentCoords,
     );
   }
 

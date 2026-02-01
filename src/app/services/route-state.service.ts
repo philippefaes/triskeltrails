@@ -41,7 +41,7 @@ export class RouteStateService {
   /**
    * Compute the effective distance
    */
-  computeEffectiveDistance(distanceToRouteM: number, gpsAccuracyM: number): number {
+  private computeEffectiveDistance(distanceToRouteM: number, gpsAccuracyM: number): number {
     return distanceToRouteM - gpsAccuracyM;
   }
 }

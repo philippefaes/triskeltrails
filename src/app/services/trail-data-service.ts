@@ -62,21 +62,17 @@ export class TrailDataService {
 
   getPois(): PoI[] {
     if(!this.pois){
-      this.pois = this.trailModel.getPois()
-      console.log("Loaded ", this.pois);
+      this.pois = this.trailModel.getPois();
     }
     if(this.pois.length >0 && !this.pois[0].idx){
-      console.log("Converting OSM POIs to Trail POIs with indices");
       this.pois = this.pois.map(poi => this.convertOsmPoiToPoi(poi));
     }
-    console.log("Returning POIs: ", this.pois || this.pois[0]);
     return this.pois!
   }
 
   private convertOsmPoiToPoi(poi: PoI): PoI {
     const point = this.findClosestPointOnTrail(poi.lat, poi.lon);
     const stage_id = findStageForPoint(point.idx, this.getTrail())
-    console.log(point)
     poi.idx = point.idx;
     poi.stage_id = stage_id;
     poi.id = poi.id || `${poi.type}-${poi.lat}-${poi.lon}`;

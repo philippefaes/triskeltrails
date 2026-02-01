@@ -12,6 +12,8 @@ import { PoI } from '../models/trail-model';
 import { TrailDataService } from '../services/trail-data-service';
 import { TrailModel } from '../models/trail-model'
 import { environment } from 'src/environments/environment';
+import { RouteStateService } from './route-state.service';
+import { RouteState } from './route-state.service';
 
 @Injectable({
   providedIn: 'root',
@@ -22,16 +24,15 @@ export class PoiMarkerService {
   private readonly MAX_POI_DISTANCE = 2000; // 2 km in metres
   private readonly showAllPoIs = false //!environment.production; // Debug flag
   private readonly trailModel = new TrailModel();
+  private readonly mapStateService = inject(RouteStateService);
+
 
   /**
    * Update POI markers based on current user position and route state.
    * Creates/destroys markers as they enter/exit visibility scope.
    */
   updatePoiMarkers(
-    map: L.Map, // TODO the PoiMarkerService should not know about Leaflet map directly
-    closestPoint: number,
-    currentStageId: string | undefined
-  ): void {
+map: L.Map, closestPoint: number, currentStageId: string | undefined, closestDistance: number, currentCoords: GeolocationCoordinates  ): void {
     const distancesToEnd = this.trailDataService.getDistancesToEnd();
     for (const poi of this.trailDataService.getPois()) {
       if (!poi.stage_id || !poi.idx) continue;
@@ -40,7 +41,10 @@ export class PoiMarkerService {
         poi,
         closestPoint,
         distancesToEnd,
-        currentStageId
+        currentStageId,
+        closestDistance,
+        currentCoords
+
       );
 
       const markerExists = this.poiMarkers.has(poi.id);
@@ -82,16 +86,16 @@ export class PoiMarkerService {
   }
 
   private shouldShowPoiMarker(
-    poi: PoI,
-    closestPoint: number,
-    distancesToEnd: number[],
-    currentStageId: string | undefined
-  ): boolean {
+poi: PoI, closestPoint: number, distancesToEnd: number[], currentStageId: string | undefined, closestDistance: number, currentCoords: GeolocationCoordinates  ): boolean {
     // Debug mode: show all
     if (this.showAllPoIs) {
       console.log(`Showing POI ${poi.name} because debug mode is on`);
       return true;
 
+    }
+    // TODO : don't show if off-route
+    if(this.mapStateService.getRouteState(closestDistance,currentCoords.accuracy) == RouteState.OFF_ROUTE){
+      return false;
     }
 
     // // POI must be ahead of us
