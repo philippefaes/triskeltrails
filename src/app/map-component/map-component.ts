@@ -122,7 +122,7 @@ export class MapComponent implements OnInit, AfterViewInit{
         title: name,
         icon: endOfStageIcon,
       }).addTo(this.map!);
-      marker.bindPopup(`<b>${name}</b>`).openPopup();
+    marker.bindPopup(`<b>${name}</b>`);
   }
   public stopGpsWatch() {
     if (this.watchId != null){
