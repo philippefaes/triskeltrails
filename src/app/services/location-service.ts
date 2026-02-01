@@ -7,9 +7,7 @@ import { environment } from '../../environments/environment';
 
 export class LocationService {
 
-  overrideCoords /* : GeolocationCoordinates */
-    = {latitude:33.7963722, longitude: 135.5223151, accuracy: 5};
-    // = {latitude:33.819017855854305, longitude: 135.6248474121094, accuracy: 5};
+  overrideCoords: any | {latitude: number, longitude: number, accuracy:number} = undefined;
 
   readonly overrideEnabled = !environment.production;
 

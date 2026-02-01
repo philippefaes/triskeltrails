@@ -83,7 +83,7 @@ export class MapComponent implements OnInit, AfterViewInit{
 
     const tiles = L.tileLayer(tilesUrl, {
       maxZoom: this.isProduction ?17 : 20, // switch to 17 to save tiles
-      minZoom: this.isProduction ?10 : 2,
+      minZoom: this.isProduction ?7 : 2,
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     });
     tiles.addTo(this.map);
