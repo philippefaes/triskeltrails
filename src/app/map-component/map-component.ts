@@ -34,7 +34,6 @@ export class MapComponent implements OnInit, AfterViewInit{
   private readonly trailDataService = inject(TrailDataService);
   private readonly routeStateService = inject(RouteStateService);
   readonly isProduction = environment.production;
-  readonly showAllPoIs = false ;//!environment.production; // Debug flag: show all POIs in dev mode
 
   private poiMarkers = new Map<string, L.Marker>(); // Track POI markers by ID
 
@@ -204,8 +203,7 @@ export class MapComponent implements OnInit, AfterViewInit{
     // distance to nearest PoI
     const result = this.poiMarkerService.getDistanceToNearestPoi(
       currentStage?.id,
-      closestPoint,
-      this.showAllPoIs);
+      closestPoint);
     this.distanceToNextPoi.set(result.distance);
     this.nextPoi.set(result.poi);
 

@@ -58,8 +58,29 @@ export class TrailDataService {
     return this.trailModel.getStages()
   }
 
+  pois?: PoI[]
+
   getPois(): PoI[] {
-    return this.trailModel.getPois()
+    if(!this.pois){
+      this.pois = this.trailModel.getPois()
+      console.log("Loaded ", this.pois);
+    }
+    if(this.pois.length >0 && !this.pois[0].idx){
+      console.log("Converting OSM POIs to Trail POIs with indices");
+      this.pois = this.pois.map(poi => this.convertOsmPoiToPoi(poi));
+    }
+    console.log("Returning POIs: ", this.pois || this.pois[0]);
+    return this.pois!
+  }
+
+  private convertOsmPoiToPoi(poi: PoI): PoI {
+    const point = this.findClosestPointOnTrail(poi.lat, poi.lon);
+    const stage_id = findStageForPoint(point.idx, this.getTrail())
+    console.log(point)
+    poi.idx = point.idx;
+    poi.stage_id = stage_id;
+    poi.id = poi.id || `${poi.type}-${poi.lat}-${poi.lon}`;
+    return poi;
   }
 
   computeDistanceToEndFromPointIndex(pointIdx: number): number {
@@ -106,17 +127,15 @@ export class TrailDataService {
    * Returns the index and distance to that point.
    */
   findClosestPointOnTrail(lat: number, lon: number): { idx: number; distance: number } {
-
-    
     const polyline = this.getPolyLine();
     if (!polyline || polyline.length === 0) {
       return { idx: 0, distance: 0 };
     }
-
     let closestIdx = 0;
     let closestDistance = Infinity;
 
     for (let i = 0; i < polyline.length; i++) {
+      // if( i % 1 === 0){continue;} // Skip some points for performance
       const distance = this.computeDistance(
         lat,
         lon,
@@ -135,7 +154,7 @@ export class TrailDataService {
   getPolyLine() : [number, number][] {
     const tracksData = this.getTracksData();
     if (!tracksData.features || tracksData.features.length === 0) {
-      return [];  
+      return [];
     }
     const feature = tracksData.features[0];
       var polyline :[number, number][] = [];
@@ -149,3 +168,12 @@ export class TrailDataService {
     return polyline
   }
 }
+function findStageForPoint(idx: number, arg1: Trail): string | undefined {
+  for (const stage of arg1.stages) {
+    if (idx >= stage.start_idx && idx <= stage.end_idx) {
+      return stage.id;
+    }
+  }
+  return undefined;
+}
+

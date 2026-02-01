@@ -89,7 +89,9 @@ export class PoiMarkerService {
   ): boolean {
     // Debug mode: show all
     if (this.showAllPoIs) {
+      console.log(`Showing POI ${poi.name} because debug mode is on`);
       return true;
+
     }
 
     // // POI must be ahead of us
@@ -116,8 +118,7 @@ export class PoiMarkerService {
    */
   getDistanceToNearestPoi(
       currentStageId: string | undefined,
-      closestPoint: number,
-      showAllPoIs: boolean=false): { poi: PoI|undefined, distance: number|undefined } {
+      closestPoint: number): { poi: PoI|undefined, distance: number|undefined } {
     const pois = this.trailModel.getPois();
     const distancesToEnd = this.trailDataService.getDistancesToEnd();
 
@@ -131,7 +132,7 @@ export class PoiMarkerService {
       // Compute distance along trail to POI
       const distanceAlongTrail = distancesToEnd[closestPoint] - distancesToEnd[poi.idx];
       // Filter: not too far (unless debug mode or bailout type)
-      if (!showAllPoIs && poi.type !== 'bailout' && distanceAlongTrail > MAX_POI_DISTANCE) {
+      if (!this.showAllPoIs && poi.type !== 'bailout' && distanceAlongTrail > MAX_POI_DISTANCE) {
         continue;
       }
       return { poi, distance: distanceAlongTrail };

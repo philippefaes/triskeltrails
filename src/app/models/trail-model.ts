@@ -1,8 +1,11 @@
 import { Injectable } from '@angular/core';
 import { FeatureCollection } from 'geojson';
-// const trailname = 'nakahechi';
+
+// import tracksData from '../../assets/nakahechi/tracks.json';
+// import pois from '../../assets/nakahechi/pois.json';
+// import stages from '../../assets/nakahechi/stages.json';
 import tracksData from '../../assets/scaldea/tracks.json';
-import pois from '../../assets/nakahechi/pois.json';
+import pois from '../../assets/scaldea/pois.json';
 import stages from '../../assets/scaldea/stages.json';
 
 export interface Trail {
@@ -23,7 +26,7 @@ export interface PoI {
   name: string,
   lat: number,
   lon: number,
-  stage_id: string,
+  stage_id?: string,
   idx?: number,
 }
 
@@ -59,6 +62,6 @@ export class TrailModel {
   }
 
   getPois(): PoI[] {
-    return pois as PoI[];
+    return (pois as any) as PoI[];
   }
 }
