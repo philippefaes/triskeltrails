@@ -89,25 +89,101 @@ Implemented: Smart hybrid approach — keep markers alive while in scope, create
 - NEAR_ROUTE: `50 < effectiveDistanceM <= 250`  
 - OFF_ROUTE: `effectiveDistanceM > 250`  
 
-### 8.3 ✅ Behavior per state
+## ✅8.3 Map behavior & auto-follow (authoritative spec)
 
-8.3.1 ON_ROUTE:
+### Definition
+**Auto-follow** means: the map automatically recenters on the user location
+(`panTo(userLocation)`) on GPS updates.
 
-- show stage + distances + next POI  
-- map auto-follow enabled (`panTo`)  
+Auto-follow is **implicit behavior**, not a user setting.
+The app decides when it is allowed, based on route state.
+The user can temporarily override it by interacting with the map.
 
-8.3.2 NEAR_ROUTE:
+---
 
-- show stage + distances + next POI  
-- show subtle warning text (“GPS uncertain / near route”)  
-- map auto-follow disabled  
+### Core principles
+1. The user always wins over automation.
+2. Auto-follow must never fight manual map exploration.
+3. No time-based reactivation (no timers).
+4. Auto-follow is only active when the app is confident.
 
-8.3.3 OFF_ROUTE:
+---
 
-- show only off-route message + distance to route  
-- hide stage distance + POI info  
-- map auto-follow disabled  
-- show button “Show route” (pan/zoom to nearest route point)  
+### Internal follow modes
+The app maintains an internal follow mode:
+
+- `AUTO`   → map follows user automatically
+- `MANUAL` → map does not auto-pan; marker still updates
+
+This is **not** exposed as a settings toggle.
+
+---
+
+### State-driven defaults
+
+#### ON_ROUTE
+- Default follow mode: `AUTO`
+- Behavior:
+  - On GPS update: `panTo(userLocation)`
+- UI:
+  - Show a small “Follow me” / crosshair button
+    (visible only if follow mode is MANUAL)
+
+#### NEAR_ROUTE
+- Default follow mode: `MANUAL`
+- Behavior:
+  - No auto-pan
+  - Marker updates only
+- UI:
+  - No automatic following
+  - Optional one-time “Center on me” action (does NOT enable AUTO)
+
+#### OFF_ROUTE
+- Default follow mode: `MANUAL`
+- Behavior:
+  - No auto-pan
+- UI:
+  - Show button: **“Show route”**
+    - One-time pan/zoom to nearest route point
+    - Does NOT enable auto-follow
+
+---
+
+### ✅User interaction rules
+
+8.3.1 User drags, zooms, or otherwise moves the map  
+→ Immediately set follow mode to `MANUAL`  
+→ Stop all automatic `panTo`
+
+8.3.2 User taps **“Follow me”**  
+→ One-time center on user location  
+→ If route state is ON_ROUTE:
+   - Set follow mode to `AUTO`
+→ If route state is NEAR_ROUTE or OFF_ROUTE:
+   - Center only; follow mode remains `MANUAL`
+
+8.3.3 Route state changes
+- If state becomes NEAR_ROUTE or OFF_ROUTE:
+  - Force follow mode to `MANUAL`
+- If state becomes ON_ROUTE:
+  - Follow mode may return to `AUTO`
+  - Only if the user has not manually disabled it
+
+---
+
+### Explicit non-behavior
+- No timers to re-enable auto-follow
+- No snapping back after a few seconds
+- No hidden re-centering
+- No follow behavior when GPS confidence is low
+
+---
+
+### Summary (one-liner)
+Auto-follow is allowed only when ON_ROUTE, disabled immediately by user map interaction,
+and re-enabled only by explicit user intent — never by a timeout.
+
+
 
 ### 8.4 Reduce flicker
 
@@ -121,6 +197,9 @@ Implemented: Smart hybrid approach — keep markers alive while in scope, create
 8.5.3 Do not add alerts/notifications.  
 8.5.4 Do not add settings/config screens.  
 
+### 8.6 Show scale
+
+Show a scale at the bottom of the map so that the user can estimate distances.
 ---
 
 ## 9. ✅ Acceptance criteria (MVP sanity check)
