@@ -8,6 +8,7 @@ import { Trail, PoI, Stage, TrailModel } from '../models/trail-model';
 export class TrailDataService {
   private distancesToEndCache: number[] | null = null;
   private trailModel = new TrailModel();
+  polyLine?: [number, number][];
 
   computeDistanceToEndOfStage(closestPoint: number, currentStage: Stage | undefined) : number | undefined {
     if (!currentStage) return undefined
@@ -148,7 +149,15 @@ export class TrailDataService {
   }
 
   getPolyLine() : [number, number][] {
-    const tracksData = this.getTracksData();
+    if (!this.polyLine){
+      const rawPolyLine = this.loadPolyLine();
+      this.polyLine = this.interpolatePolyLine(rawPolyLine, 10); // interpolate to max 10m between points
+    }
+    return this.polyLine;
+  }
+
+  private loadPolyLine(): [number, number][] {
+      const tracksData = this.getTracksData();
     if (!tracksData.features || tracksData.features.length === 0) {
       return [];
     }
@@ -161,7 +170,29 @@ export class TrailDataService {
     }else{
       return []
     }
-    return polyline
+    return polyline;
+  }
+
+  private interpolatePolyLine(polyline: [number, number][], maxDistance: number): [number, number][] {
+    const interpolated: [number, number][] = [];
+    for (let i = 0; i < polyline.length - 1; i++) {
+      const [lon1, lat1] = polyline[i];
+      const [lon2, lat2] = polyline[i + 1];
+      interpolated.push([lon1, lat1]);
+
+      const distance = this.computeDistance(lat1, lon1, lat2, lon2);
+      const steps = Math.ceil(distance / maxDistance);
+
+      for (let step = 1; step < steps; step++) {
+        const t = step / steps;
+        const interpolatedLat = lat1 + t * (lat2 - lat1);
+        const interpolatedLon = lon1 + t * (lon2 - lon1);
+        interpolated.push([interpolatedLon, interpolatedLat]);
+      }
+    }
+    // Add the last point
+    interpolated.push(polyline[polyline.length - 1]);
+    return interpolated;
   }
 }
 function findStageForPoint(idx: number, arg1: Trail): string | undefined {

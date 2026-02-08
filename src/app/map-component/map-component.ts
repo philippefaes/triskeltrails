@@ -68,19 +68,11 @@ export class MapComponent implements OnInit, AfterViewInit{
       console.log("FollowMe changed to:", this.followMe());
     });
     effect(() => {
-      const pos= this.userPos();
-      if(pos)
-      console.log("User position updated:", pos.coords.latitude, pos.coords.longitude);
-    });
-    effect(() => {
-    });
-    effect(() => {
       const pos = this.userPos();
       if (pos) {
         this.processLocation(pos);
         this.updateLocationMarker();
       }
-      console.log("Panning to user, followMe=", this.followMe());
       if (this.followMe()){
         this.doPan(this.userPos());
       }
@@ -116,12 +108,17 @@ export class MapComponent implements OnInit, AfterViewInit{
       zoomControl: false
     });
 
+    //
+    // Attribution
+    //
     const tiles = L.tileLayer(tilesUrl, {
       maxZoom: this.isProduction ?17 : 20, // switch to 17 to save tiles
       minZoom: this.isProduction ?7 : 2,
+
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     });
     tiles.addTo(this.map);
+    const attributionControl = this.map?.attributionControl?.setPrefix(false);
 
     //
     // GPS trail
@@ -136,7 +133,9 @@ export class MapComponent implements OnInit, AfterViewInit{
     const coords = this.trailDataService.getPolyLine()
     const trail = this.trailModel.getStages();
 
-    // Start point
+    //
+    // Stage start and end points
+    //
     const endPoint = coords[trail.stages[0].start_idx];
     this.createStageEndMarker('Start', endPoint);
     // Stage endpoints
@@ -145,10 +144,13 @@ export class MapComponent implements OnInit, AfterViewInit{
       this.createStageEndMarker(stage.end_label, endPoint);
     }
 
-
+    //
+    // Event handlers
+    //
     this.map.on('click', (event: L.LeafletMouseEvent) => {
       console.log("Map clicked at ", event.latlng);
       if (this.locationService.overrideEnabled){
+        // for debugging purposes, allow clicking on the map to set the user location (when override is enabled)
         this.locationService.setOverrideCoords(event.latlng.lat, event.latlng.lng);
       }
     });
@@ -156,15 +158,14 @@ export class MapComponent implements OnInit, AfterViewInit{
     this.map.on('dragend', () => {
       // User interaction disables follow mode (MANUAL)
       this.followMe.set(false);
-      console.log("map moved to ", this.map!.getCenter());
     });
 
     this.map.on('zoomend', () => {
       // User interaction disables follow mode (MANUAL)
       this.followMe.set(false);
-      console.log("map zoomed to ", this.map!.getZoom());
     });
 
+    // Scale control
     L.control.scale({
       position: 'bottomleft',
       maxWidth: 100,
@@ -235,7 +236,6 @@ export class MapComponent implements OnInit, AfterViewInit{
     const { idx: closestPoint, distance: closestDistance } =
       this.trailDataService.findClosestPointOnTrail(currentCoords.latitude, currentCoords.longitude);
     this.closestDistance.set(Math.round(closestDistance));
-    console.log("closest point is index ", closestPoint, " at distance ", closestDistance, " meters");
 
     // Compute route state using RouteStateService
     const routeState = this.routeStateService.getRouteState(closestDistance, currentCoords.accuracy);
@@ -283,10 +283,8 @@ export class MapComponent implements OnInit, AfterViewInit{
     }
 
   private doPan(pos: GeolocationPosition|null): void {
-    console.log("Panning to user at ", pos?.coords.latitude, pos?.coords.longitude);
     if(this.map){
       if(pos){
-        console.log("Panning to user at ", pos.coords.latitude, pos.coords.longitude);
         const latLng = new L.LatLng(pos.coords.latitude, pos.coords.longitude)
         this.map.panTo(latLng,
            {animate: false, duration: 1, easeLinearity: 0.5, noMoveStart: true}

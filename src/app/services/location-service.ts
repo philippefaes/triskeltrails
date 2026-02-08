@@ -28,7 +28,6 @@ export class LocationService {
           latitude: this.overrideCoords.latitude - 0.0005,
           longitude: this.overrideCoords.longitude,
           accuracy: this.overrideCoords.accuracy};
-          console.log("New override coords:", this.overrideCoords);
         var dummyPos /*: GeolocationPosition*/ = {coords:this.overrideCoords, timestamp: Date.now()};
         successCallback(dummyPos as GeolocationPosition);
         this.interval = setInterval(() => {
@@ -36,7 +35,6 @@ export class LocationService {
           dummyPos.coords.latitude += this.latMovement; // Simuleer beweging naar het zuiden
           dummyPos.coords.longitude += this.lonMovement; // Simuleer beweging naar het oosten
           successCallback(dummyPos as GeolocationPosition);
-            console.log("Updating override coordinates",dummyPos.coords);
         }, 500);
 
       }, errorCallback, parameters);

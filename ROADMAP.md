@@ -202,6 +202,10 @@ and re-enabled only by explicit user intent — never by a timeout.
 Show a scale at the bottom of the map so that the user can estimate distances.
 ---
 
+### 8.7 Show route
+
+When the user is off-route, there should be a "Show Route" button. This button places the complete route on screem (pan/zoom).
+
 ## 9. ✅ Acceptance criteria (MVP sanity check)
 
 9.1 App never shows confident stage distances in OFF_ROUTE.  
@@ -210,3 +214,10 @@ Show a scale at the bottom of the map so that the user can estimate distances.
 9.4 With 0 POIs, the app remains calm and usable.  
 9.5 GPS denial gracefully falls back to a fixed demo location.  
 
+### 10 Landing page
+
+Create a new page as landing page (route: "/")
+One column, no menu, no footer navigation.
+"Lorem ipsum" for now.
+Should work on mobile and on laptops.
+Single call to action to open the map ("/map)
