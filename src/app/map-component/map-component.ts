@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, inject, OnInit, Pipe, signal } from '@angular/core';
+import { AfterViewInit, Component, effect, inject, OnInit, Pipe, Signal, signal } from '@angular/core';
 import { RouteStateService, RouteState } from '../services/route-state.service';
 import * as L from 'leaflet';
 import { Stage, PoI } from '../models/trail-model';
@@ -27,7 +27,7 @@ const endOfStageIcon = L.divIcon({
 
 export class MapComponent implements OnInit, AfterViewInit{
   watchId: number | null = null;
-  userMarker: L.Marker|null = null;
+  locationMarker: L.Marker|null = null;
   private readonly locationService = inject(LocationService);
   private readonly poiMarkerService = inject(PoiMarkerService);
   private readonly trailModel = new TrailModel();
@@ -47,9 +47,45 @@ export class MapComponent implements OnInit, AfterViewInit{
   routeState = signal<RouteState | undefined>(undefined);
 
 
-  followMe = false;
+  /**
+   * followMe: true = AUTO (map auto-pans to user)
+   * followMe: false = MANUAL (user controls map)
+   */
+  followMe = signal<boolean>(false);
+  userPos = signal<GeolocationPosition | null >(null);
 
-  constructor() { }
+  constructor() {
+    effect(() => {
+      console.log("Route state changed to ", this.routeState());
+      if (this.routeState() === 'NEAR_ROUTE' || this.routeState() === 'OFF_ROUTE') {
+        this.followMe.set(false);
+      }else if (this.routeState() === 'ON_ROUTE') {
+        // do not force followMe true, just allow it
+        // user should click pan-to button to re-enable
+      }
+    });
+    effect(() => {
+      console.log("FollowMe changed to:", this.followMe());
+    });
+    effect(() => {
+      const pos= this.userPos();
+      if(pos)
+      console.log("User position updated:", pos.coords.latitude, pos.coords.longitude);
+    });
+    effect(() => {
+    });
+    effect(() => {
+      const pos = this.userPos();
+      if (pos) {
+        this.processLocation(pos);
+        this.updateLocationMarker();
+      }
+      console.log("Panning to user, followMe=", this.followMe());
+      if (this.followMe()){
+        this.doPan(this.userPos());
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.startGpsWatch()
@@ -64,7 +100,6 @@ export class MapComponent implements OnInit, AfterViewInit{
   }
 
   private map?: L.Map;
-  private userLatLng: L.LatLng | null = null;
 
   private initMap(): void {
     //
@@ -110,10 +145,24 @@ export class MapComponent implements OnInit, AfterViewInit{
       this.createStageEndMarker(stage.end_label, endPoint);
     }
 
+
+    this.map.on('click', (event: L.LeafletMouseEvent) => {
+      console.log("Map clicked at ", event.latlng);
+      if (this.locationService.overrideEnabled){
+        this.locationService.setOverrideCoords(event.latlng.lat, event.latlng.lng);
+      }
+    });
+
     this.map.on('dragend', () => {
-        this.followMe = false;
-        console.log("map moved to ",this.map!.getCenter());
-        this.locationService.setMiddleOfMapAsOverride(this.map!.getCenter().lat, this.map!.getCenter().lng);
+      // User interaction disables follow mode (MANUAL)
+      this.followMe.set(false);
+      console.log("map moved to ", this.map!.getCenter());
+    });
+
+    this.map.on('zoomend', () => {
+      // User interaction disables follow mode (MANUAL)
+      this.followMe.set(false);
+      console.log("map zoomed to ", this.map!.getZoom());
     });
   }
 
@@ -131,11 +180,14 @@ export class MapComponent implements OnInit, AfterViewInit{
     this.watchId = null;
   }
 
-  private updateUserLocation(lat: number, lng: number, accuracyM: number): void {
-    const latLng: L.LatLngExpression = [lat, lng];
-    this.userLatLng = L.latLng(lat, lng); // Store for pan-to-location
-    if (!this.userMarker) {
-      this.userMarker = L.marker(latLng,
+  private updateLocationMarker(): void {
+    const userPos = this.userPos();
+    if (!userPos) return;
+    const latLng :L.LatLngExpression = new L.LatLng(userPos.coords.latitude, userPos.coords.longitude)  ;
+    if (!latLng) return;
+
+    if (!this.locationMarker) {
+      this.locationMarker = L.marker(latLng,
         {icon: L.divIcon({
           className: 'user-dot',
           html: '<div style="width:15px;height:15px;border-radius:50%;background:blue;"></div>',
@@ -144,27 +196,24 @@ export class MapComponent implements OnInit, AfterViewInit{
         }),
       }).addTo(this.map!);
     } else {
-      this.userMarker.setLatLng(latLng);
+      this.locationMarker.setLatLng(latLng);
     }
 
-    // optioneel: accuracircle
+    // optioneel: accuracy circle
     // L.circle(latLng, { radius: accuracyM }).addTo(this.map); // let op: maak dan 1 circle en update hem, anders spam je layers
-
   }
+
   public startGpsWatch() {
     this.watchId = this.locationService.startGpsWatch(
-      (pos:any) => {
-        //const coords = this.overrideCoords? this.overrideCoords : pos.coords
-        const coords = pos.coords;
-        this.updateUserLocation(coords.latitude, coords.longitude, coords.accuracy);
-        this.processLocation(pos);
+      (pos: GeolocationPosition) => {
+        this.userPos.set(pos);
       },
-      (err:any) => {
-         console.error('GPS error:', err.code, err.message);
+      (err: any) => {
+        console.error('GPS error:', err.code, err.message);
       },
       {
         enableHighAccuracy: true,
-        maximumAge: 5000,
+        maximumAge: 500, // can be 5000
         timeout: 10000
       }
     );
@@ -213,11 +262,31 @@ export class MapComponent implements OnInit, AfterViewInit{
 
 
 
+  /**
+   * Called by "Follow me" button. One-time center on user, and set follow mode.
+   */
   public panToUserLocation(): void {
-    if (this.map && this.userLatLng) {
-      this.map.panTo(this.userLatLng);
-      this.map.setZoom(15);
-      this.followMe = true;
+      // If ON_ROUTE, enable AUTO follow; else, just center once
+      this.doPan(this.userPos());
+      if (this.routeState() === 'ON_ROUTE') {
+        this.followMe.set(true);
+      } else {
+        this.followMe.set(false);
+      }
+    }
+
+  private doPan(pos: GeolocationPosition|null): void {
+    console.log("Panning to user at ", pos?.coords.latitude, pos?.coords.longitude);
+    if(this.map){
+      if(pos){
+        console.log("Panning to user at ", pos.coords.latitude, pos.coords.longitude);
+        const latLng = new L.LatLng(pos.coords.latitude, pos.coords.longitude)
+        this.map.panTo(latLng,
+           {animate: false, duration: 1, easeLinearity: 0.5, noMoveStart: true}
+        );
+        this.map.setZoom(15);
+      }
     }
   }
 }
+

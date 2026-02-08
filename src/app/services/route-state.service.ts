@@ -19,7 +19,7 @@ export enum RouteState {
   providedIn: 'root',
 })
 export class RouteStateService {
-  private readonly ON_ROUTE_THRESHOLD = 50; // metres
+  private readonly ON_ROUTE_THRESHOLD = 100; // metres
   private readonly NEAR_ROUTE_THRESHOLD = 250; // metres
 
   /**

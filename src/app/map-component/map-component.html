@@ -6,22 +6,21 @@
         <div class="info-block">Location data is not available.</div>
       }@else {
         <div class="info-block">
-          <div class="route-state">
+          @if(routeState()==='NEAR_ROUTE' || routeState()==='OFF_ROUTE'){<div class="route-state">
             @switch(routeState()) {
               @case('ON_ROUTE') {
-                <span class="state-icon on-route" aria-label="On route">🟢</span>
-                <span>You are on the trail</span>
+                <!-- <span class="state-icon on-route" aria-label="On route">🟢</span>
+                <span>You are on the trail</span> -->
               }
               @case('NEAR_ROUTE') {
                 <span class="state-icon near-route" aria-label="Near route">🟡</span>
                 <span>Near trail: {{closestDistance()|distance}}</span>
               }
               @case('OFF_ROUTE') {
-                <span class="state-icon off-route" aria-label="Off route">🔴</span>
-                <span>Off trail: {{ closestDistance()! | distance }}</span>
+                <span>Distance to the trail: {{ closestDistance()! | distance }}</span>
               }
             }
-          </div>
+          </div>}
           @if (currentStage() && (routeState() === 'ON_ROUTE' || routeState() === 'NEAR_ROUTE')) {
             <div class="stage-info">
               <span class="stage-label">Stage:</span> <span class="stage-name">{{ currentStage()?.name }}</span>
@@ -46,7 +45,7 @@
       <button (click)="panToUserLocation()" class="pan-button" title="Center map on current location" aria-label="Center map on current location">
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="14" cy="14" r="10" stroke="#1976d2" stroke-width="3" fill="none"/>
-          <circle cx="14" cy="14" r="4" fill="#1976d2"/>
+          @if(followMe()){<circle cx="14" cy="14" r="4" fill="#1976d2"/>}
         </svg>
       </button>
     }
