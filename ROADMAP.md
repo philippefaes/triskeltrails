@@ -214,10 +214,35 @@ When the user is off-route, there should be a "Show Route" button. This button p
 9.4 With 0 POIs, the app remains calm and usable.  
 9.5 GPS denial gracefully falls back to a fixed demo location.  
 
-### 10 Landing page
+### 10 ✅ Landing page
 
 Create a new page as landing page (route: "/")
 One column, no menu, no footer navigation.
 "Lorem ipsum" for now.
 Should work on mobile and on laptops.
 Single call to action to open the map ("/map)
+
+### 11 Telemetry
+'
+#### 11.1 Create a "service" for telemetry. We'll use this to send signals to Plausible
+
+#### 11.2 Log events to Plausible for route changes
+
+#### 11.3 Log events to Plausible for one custom event: Follow-Me button clicked
+
+#### Automatically
+
+Page views:
+
+- / (landing)
+- /app (PWA)
+
+#### Custom events (suggested)
+
+- open_companion: fired when PWA loads successfully
+- gps_permission_denied: tells you if friction is killing usage
+- route_state_change: 
+    - properties: to = ON_ROUTE | NEAR_ROUTE | OFF_ROUTE
+    - aggregated counts only
+- follow_me_clicked: tells you if auto-follow UX fights users
+- session_10min: fired once per session after 10 minutes active - this is gold for validation

@@ -23,6 +23,7 @@ p {
   text-align: center;
 }
 
+
 .cta-button {
   font-size: 1.15rem;
   padding: 12px 32px;
@@ -33,6 +34,10 @@ p {
   cursor: pointer;
   box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
   transition: background 0.2s;
+  width: auto;
+  min-width: 0;
+  display: inline-block;
+  margin: 0 auto;
 }
 
 .cta-button:hover {
@@ -112,7 +117,6 @@ p {
   &__subtitle {
     font-size: 1.125rem;
     opacity: 0.85;
-    max-width: 60ch;
     margin: 0 0 18px;
   }
 

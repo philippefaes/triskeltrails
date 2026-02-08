@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, effect, inject, OnInit, Pipe, Signal, signal } from '@angular/core';
+import { TelemetryService } from '../services/telemetry.service';
 import { RouteStateService, RouteState } from '../services/route-state.service';
 import * as L from 'leaflet';
 import { Stage, PoI } from '../models/trail-model';
@@ -24,8 +25,7 @@ const endOfStageIcon = L.divIcon({
   templateUrl: './map-component.html',
   styleUrl: './map-component.scss',
 })
-
-export class MapComponent implements OnInit, AfterViewInit{
+export class MapComponent implements OnInit, AfterViewInit {
   watchId: number | null = null;
   locationMarker: L.Marker|null = null;
   private readonly locationService = inject(LocationService);
@@ -33,6 +33,7 @@ export class MapComponent implements OnInit, AfterViewInit{
   private readonly trailModel = new TrailModel();
   private readonly trailDataService = inject(TrailDataService);
   private readonly routeStateService = inject(RouteStateService);
+  private readonly telemetry = inject(TelemetryService);
   readonly isProduction = environment.production;
 
   private poiMarkers = new Map<string, L.Marker>(); // Track POI markers by ID
@@ -45,7 +46,6 @@ export class MapComponent implements OnInit, AfterViewInit{
   nextPoi = signal<PoI | undefined>(undefined);
   distanceToNextPoi = signal<number | undefined>(undefined);
   routeState = signal<RouteState | undefined>(undefined);
-
 
   /**
    * followMe: true = AUTO (map auto-pans to user)
@@ -271,16 +271,17 @@ export class MapComponent implements OnInit, AfterViewInit{
 
   /**
    * Called by "Follow me" button. One-time center on user, and set follow mode.
+   * Also logs custom telemetry event.
    */
   public panToUserLocation(): void {
-      // If ON_ROUTE, enable AUTO follow; else, just center once
-      this.doPan(this.userPos());
-      if (this.routeState() === 'ON_ROUTE') {
-        this.followMe.set(true);
-      } else {
-        this.followMe.set(false);
-      }
+    this.doPan(this.userPos());
+    if (this.routeState() === 'ON_ROUTE') {
+      this.followMe.set(true);
+    } else {
+      this.followMe.set(false);
     }
+    this.telemetry.logFollowMeClicked();
+  }
 
   private doPan(pos: GeolocationPosition|null): void {
     if(this.map){
