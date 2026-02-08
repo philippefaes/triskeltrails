@@ -197,7 +197,7 @@ and re-enabled only by explicit user intent — never by a timeout.
 8.5.3 Do not add alerts/notifications.  
 8.5.4 Do not add settings/config screens.  
 
-### 8.6 Show scale
+### 8.6 ✅ Show scale
 
 Show a scale at the bottom of the map so that the user can estimate distances.
 ---

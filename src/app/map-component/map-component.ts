@@ -164,6 +164,13 @@ export class MapComponent implements OnInit, AfterViewInit{
       this.followMe.set(false);
       console.log("map zoomed to ", this.map!.getZoom());
     });
+
+    L.control.scale({
+      position: 'bottomleft',
+      maxWidth: 100,
+      metric: true,
+      imperial: false
+    }).addTo(this.map!);
   }
 
   private createStageEndMarker(name: string, coord: number[]): void {
